@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
+<title>API Keys — PushFlow</title>
+<link rel="icon" type="image/png" href="https://raw.githubusercontent.com/M41NUL/pushflow-web/main/img/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ============ TOKENS — identical to dashboard/login/register ============ */
+:root{
+  --bg:#08080a;
+  --panel:#0e0e11;
+  --panel-2:#131316;
+  --surface:rgba(255,255,255,0.045);
+  --surface-2:rgba(255,255,255,0.075);
+  --border:rgba(255,255,255,0.10);
+  --border-hi:rgba(255,255,255,0.20);
+
+  --amber-1:#FFD84A;
+  --amber-2:#FFB020;
+  --amber-3:#FF8A00;
+
+  --green:#3DDC84;
+  --red:#FF6B6B;
+
+  --white:#FFFFFF;
+  --text:#F3F3F5;
+  --text-dim:#9C9CA6;
+  --text-faint:#5B5B65;
+
+  --radius-lg:26px;
+  --radius-md:16px;
+  --radius-sm:10px;
+  --shadow-soft: 0 18px 46px -22px rgba(0,0,0,0.75);
+  --font-display:'Space Grotesk', sans-serif;
+  --font-body:'Inter', sans-serif;
+  --font-mono:'JetBrains Mono', monospace;
+
+  --sidebar-w:256px;
+  --bottomnav-h:68px;
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html{overflow-x:hidden;max-width:100%;}
+body{
+  background:
+    radial-gradient(ellipse 900px 620px at 12% -8%, rgba(255,176,32,0.08), transparent 60%),
+    var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  min-height:100vh;
+  -webkit-font-smoothing:antialiased;
+}
+::-webkit-scrollbar{width:10px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.10);border-radius:10px;}
+a{color:inherit;text-decoration:none;}
+button{font-family:inherit;cursor:pointer;border:none;background:none;}
+input{font-family:inherit;}
+img,svg{display:block;}
+:focus-visible{outline:2px solid var(--amber-2);outline-offset:3px;border-radius:8px;}
+
+.icon{flex-shrink:0;}
+
+.glass{
+  background:rgba(255,255,255,0.05);
+  border:1px solid rgba(255,255,255,0.12);
+  backdrop-filter:blur(26px) saturate(180%);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);
+  border-radius:var(--radius-lg);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    inset 0 0 0 1px rgba(255,255,255,0.02),
+    var(--shadow-soft);
+}
+
+.eyebrow{
+  font-family:var(--font-mono);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--amber-2);display:inline-flex;align-items:center;gap:8px;
+}
+.eyebrow svg{color:var(--amber-2);}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  font-family:var(--font-body);font-weight:600;font-size:14.5px;
+  padding:12px 22px;border-radius:100px;border:1px solid transparent;
+  transition:transform 0.3s cubic-bezier(.2,.8,.2,1), background 0.3s, border-color .3s;
+  white-space:nowrap;
+}
+.btn-primary{
+  background:linear-gradient(100deg, var(--amber-1) 0%, var(--amber-3) 100%);
+  color:#1a1200;
+  box-shadow:0 10px 24px -10px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.btn-primary:hover{transform:translateY(-2px);}
+.btn-primary:active{transform:translateY(0) scale(.98);}
+.btn-ghost{background:var(--surface-2);color:var(--white);border:1px solid var(--border-hi);}
+.btn-ghost:hover{background:rgba(255,255,255,0.13);transform:translateY(-2px);}
+.btn-danger{background:linear-gradient(100deg, #FF6B6B 0%, #E64545 100%);color:#fff;box-shadow:0 10px 24px -10px rgba(230,69,69,0.5), inset 0 1px 0 rgba(255,255,255,0.2);}
+.btn-danger:hover{transform:translateY(-2px);}
+.btn-danger:active{transform:translateY(0) scale(.98);}
+.btn-sm{padding:9px 16px;font-size:13px;}
+.btn[disabled]{opacity:.6;cursor:default;transform:none !important;}
+
+/* ============ APP SHELL ============ */
+.app-shell{display:flex;min-height:100vh;}
+
+/* ---- Sidebar (desktop) ---- */
+.sidebar{
+  width:var(--sidebar-w);
+  flex-shrink:0;
+  position:fixed;top:0;left:0;bottom:0;
+  padding:26px 18px;
+  border-right:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.035);
+  backdrop-filter:blur(26px) saturate(180%);
+  -webkit-backdrop-filter:blur(26px) saturate(180%);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,0.04);
+  display:flex;flex-direction:column;
+  z-index:200;
+}
+.sidebar-brand{display:flex;align-items:center;gap:10px;padding:6px 8px 26px;}
+.sidebar-brand img{height:36px;width:auto;}
+
+.side-nav{display:flex;flex-direction:column;gap:2px;}
+.side-link{
+  display:flex;align-items:center;gap:13px;
+  padding:12px 14px;border-radius:13px;
+  font-size:14.5px;font-weight:500;color:var(--text-dim);
+  transition:background .2s, color .2s;
+}
+.side-link svg{color:var(--text-dim);transition:color .2s;}
+.side-link:hover{background:rgba(255,255,255,0.05);color:var(--text);}
+.side-link:hover svg{color:var(--text);}
+.side-link.active{
+  background:linear-gradient(100deg, rgba(255,216,74,0.14), rgba(255,138,0,0.10));
+  color:var(--amber-1);
+  border:1px solid rgba(255,176,32,0.25);
+}
+.side-link.active svg{color:var(--amber-2);}
+
+.sidebar-footer{margin-top:auto;padding-top:16px;border-top:1px solid var(--border);}
+.side-user{display:flex;align-items:center;gap:11px;padding:11px 10px;border-radius:14px;}
+.side-user:hover{background:rgba(255,255,255,0.05);}
+.side-avatar{
+  width:38px;height:38px;border-radius:50%;
+  background:linear-gradient(135deg, var(--amber-1), var(--amber-3));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--font-display);font-weight:700;color:#1a1200;font-size:14.5px;
+  flex-shrink:0;
+}
+.side-user-info{overflow:hidden;}
+.side-user-name{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.side-user-plan{font-size:11.5px;color:var(--text-faint);}
+
+/* ---- Main content ---- */
+.main{
+  flex:1;margin-left:var(--sidebar-w);
+  padding:40px 44px 60px;
+  min-width:0;
+}
+.top-brand-row{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:26px;
+}
+.top-brand-row img{height:43px;width:auto;display:block;}
+
+/* ---- Account dropdown ---- */
+.account-menu{position:relative;}
+.account-trigger{
+  display:flex;align-items:center;gap:8px;
+  padding:6px 12px 6px 6px;border-radius:100px;
+  border:1px solid rgba(255,255,255,0.14);
+  background:rgba(255,255,255,0.06);
+  backdrop-filter:blur(20px) saturate(180%);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    0 8px 20px -10px rgba(0,0,0,0.5);
+  transition:background .25s, border-color .25s, transform .25s;
+}
+.account-trigger:hover{background:rgba(255,255,255,0.10);border-color:rgba(255,255,255,0.22);transform:translateY(-1px);}
+.account-trigger.open{background:rgba(255,255,255,0.11);border-color:rgba(255,176,32,0.3);}
+.account-trigger .side-avatar{width:32px;height:32px;font-size:13px;}
+.account-trigger svg{color:var(--text-dim);transition:transform .2s;}
+.account-trigger.open svg{transform:rotate(180deg);}
+
+.account-dropdown{
+  position:absolute;top:calc(100% + 10px);right:0;
+  width:230px;padding:8px;
+  background:rgba(20,20,24,0.65);
+  border:1px solid rgba(255,255,255,0.14);border-radius:var(--radius-md);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.14),
+    var(--shadow-soft);
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .18s ease, transform .18s ease, visibility .18s;
+  z-index:250;
+}
+.account-dropdown.open{opacity:1;visibility:visible;transform:translateY(0);}
+.account-dropdown-head{padding:10px 12px 12px;border-bottom:1px solid var(--border);margin-bottom:6px;}
+.account-dropdown-name{font-size:13.5px;font-weight:600;}
+.account-dropdown-email{font-size:12px;color:var(--text-faint);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.account-dropdown-item{
+  display:flex;align-items:center;gap:11px;
+  padding:10px 12px;border-radius:10px;
+  font-size:13.5px;font-weight:500;color:var(--text-dim);
+  transition:background .15s, color .15s;
+  width:100%;text-align:left;
+}
+.account-dropdown-item svg{color:var(--text-dim);flex-shrink:0;}
+.account-dropdown-item:hover{background:rgba(255,255,255,0.06);color:var(--text);}
+.account-dropdown-item:hover svg{color:var(--text);}
+.account-dropdown-item.danger{color:var(--red);}
+.account-dropdown-item.danger svg{color:var(--red);}
+.account-dropdown-item.danger:hover{background:rgba(255,107,107,0.10);}
+.account-dropdown-divider{height:1px;background:var(--border);margin:6px 0;}
+
+.page-title{font-family:var(--font-display);font-size:27px;font-weight:600;letter-spacing:-.01em;}
+.page-sub{color:var(--text-dim);font-size:14px;margin-top:5px;}
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:28px;flex-wrap:wrap;gap:14px;
+}
+.topbar-actions{display:flex;align-items:center;gap:12px;}
+
+/* ============ API KEYS PANEL ============ */
+.panel{padding:26px;}
+.panel + .panel{margin-top:20px;}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;gap:14px;flex-wrap:wrap;}
+.panel-title{font-family:var(--font-display);font-size:17px;font-weight:600;}
+.panel-desc{color:var(--text-dim);font-size:13.5px;margin-top:4px;margin-bottom:20px;line-height:1.5;}
+
+.key-list{display:flex;flex-direction:column;gap:2px;}
+.key-item{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 14px;border-radius:14px;
+  border:1px solid var(--border);
+  margin-bottom:10px;
+  flex-wrap:wrap;
+}
+.key-item:last-child{margin-bottom:0;}
+.key-main{display:flex;align-items:center;gap:13px;min-width:0;}
+.key-icon{
+  width:38px;height:38px;border-radius:11px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,176,32,0.10);color:var(--amber-2);
+}
+.key-info{min-width:0;}
+.key-name{font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px;}
+.key-badge{
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.04em;
+  padding:2px 8px;border-radius:100px;
+  background:rgba(61,220,132,0.12);color:var(--green);
+  text-transform:uppercase;font-weight:500;
+}
+.key-value{
+  font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);
+  margin-top:5px;display:flex;align-items:center;gap:8px;
+}
+.key-meta{font-size:11.5px;color:var(--text-faint);margin-top:4px;font-family:var(--font-mono);}
+.key-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.icon-btn{
+  width:34px;height:34px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text-dim);border:1px solid var(--border);
+  transition:background .15s, color .15s, border-color .15s;
+}
+.icon-btn:hover{background:rgba(255,255,255,0.06);color:var(--text);border-color:var(--border-hi);}
+.icon-btn.danger:hover{background:rgba(255,107,107,0.10);color:var(--red);border-color:rgba(255,107,107,0.3);}
+
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  padding:44px 20px;color:var(--text-dim);
+}
+.empty-state svg{color:var(--text-faint);margin-bottom:14px;}
+.empty-state p{font-size:13.5px;margin-bottom:18px;}
+
+.warn-note{
+  display:flex;gap:12px;padding:14px 16px;border-radius:14px;
+  background:rgba(255,176,32,0.07);border:1px solid rgba(255,176,32,0.2);
+  margin-bottom:22px;
+}
+.warn-note svg{color:var(--amber-2);flex-shrink:0;margin-top:1px;}
+.warn-note p{font-size:13px;color:var(--text-dim);line-height:1.55;}
+.warn-note b{color:var(--text);font-weight:600;}
+
+/* ---- Toast (copied) ---- */
+.toast{
+  position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(20px);
+  padding:12px 20px;border-radius:100px;
+  background:rgba(14,14,17,0.95);border:1px solid var(--border-hi);
+  font-size:13.5px;font-weight:500;color:var(--text);
+  display:flex;align-items:center;gap:9px;
+  box-shadow:var(--shadow-soft);
+  opacity:0;visibility:hidden;transition:opacity .2s, transform .2s, visibility .2s;
+  z-index:600;
+}
+.toast.show{opacity:1;visibility:visible;transform:translateX(-50%) translateY(0);}
+.toast svg{color:var(--green);}
+
+/* ============ MODALS ============ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  background:rgba(4,4,6,0.6);
+  backdrop-filter:blur(6px);
+  opacity:0;visibility:hidden;
+  transition:opacity .2s ease, visibility .2s;
+}
+.modal-overlay.open{opacity:1;visibility:visible;}
+.modal-box{
+  width:100%;max-width:420px;padding:28px;
+  transform:translateY(10px) scale(.97);
+  transition:transform .22s cubic-bezier(.2,.8,.2,1);
+}
+.modal-overlay.open .modal-box{transform:translateY(0) scale(1);}
+.modal-box.center{text-align:center;max-width:380px;}
+.modal-icon{
+  width:52px;height:52px;border-radius:15px;margin-bottom:16px;
+  display:flex;align-items:center;justify-content:center;
+  background:rgba(255,176,32,0.10);color:var(--amber-2);
+}
+.modal-box.center .modal-icon{margin:0 auto 16px;}
+.modal-icon.danger{background:rgba(255,107,107,0.12);color:var(--red);}
+.modal-title{font-family:var(--font-display);font-size:19px;font-weight:600;margin-bottom:8px;}
+.modal-text{font-size:13.5px;color:var(--text-dim);line-height:1.5;margin-bottom:20px;}
+.modal-actions{display:flex;gap:10px;margin-top:22px;}
+.modal-actions .btn{flex:1;}
+
+.field{margin-bottom:16px;}
+.field label{font-size:12.5px;font-weight:600;color:var(--text-dim);display:block;margin-bottom:7px;}
+.field input{
+  width:100%;padding:12px 14px;border-radius:12px;
+  background:var(--surface-2);border:1px solid var(--border);
+  color:var(--text);font-size:14px;
+  transition:border-color .15s;
+}
+.field input:focus{outline:none;border-color:var(--amber-2);}
+
+/* ---- new-key reveal box ---- */
+.reveal-box{
+  background:rgba(61,220,132,0.06);border:1px solid rgba(61,220,132,0.25);
+  border-radius:14px;padding:16px;margin-bottom:4px;
+}
+.reveal-label{font-size:12px;color:var(--green);font-weight:600;margin-bottom:9px;display:flex;align-items:center;gap:6px;}
+.reveal-key{
+  font-family:var(--font-mono);font-size:12.5px;word-break:break-all;
+  background:rgba(0,0,0,0.3);border-radius:10px;padding:11px 13px;
+  color:var(--text);display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.reveal-key span{overflow-wrap:anywhere;}
+.reveal-key button{flex-shrink:0;color:var(--green);}
+
+/* ============ BOTTOM NAV (mobile) — liquid glass floating card ============ */
+.bottom-nav{
+  display:none;
+  position:fixed;left:14px;right:14px;bottom:calc(14px + env(safe-area-inset-bottom));
+  z-index:200;
+  height:var(--bottomnav-h);
+  border-radius:100px;
+  background:rgba(255,255,255,0.06);
+  border:1px solid rgba(255,255,255,0.14);
+  backdrop-filter:blur(28px) saturate(180%);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,0.16),
+    inset 0 0 0 1px rgba(255,255,255,0.02),
+    0 18px 40px -14px rgba(0,0,0,0.65);
+  align-items:center;justify-content:space-around;
+  padding:0 6px;
+}
+.bottom-link{
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--text-faint);font-size:10.5px;font-weight:500;
+  padding:8px 14px;border-radius:12px;flex:1;
+}
+.bottom-link svg{color:var(--text-faint);transition:color .2s;}
+.bottom-link.active{color:var(--amber-1);}
+.bottom-link.active svg{color:var(--amber-2);}
+
+@media (max-width:900px){
+  .sidebar{display:none;}
+  .bottom-nav{display:flex;}
+  .main{margin-left:0;padding:28px 20px calc(var(--bottomnav-h) + 56px);}
+}
+@media (max-width:560px){
+  .page-title{font-size:22px;}
+  .account-dropdown{right:-8px;width:210px;}
+  .key-item{flex-direction:column;align-items:flex-start;}
+  .key-actions{width:100%;justify-content:flex-end;}
+}
+</style>
+</head>
+<body>
+
+<div class="app-shell">
+
+  <!-- ============ SIDEBAR (desktop) ============ -->
+  <aside class="sidebar">
+    <a href="index.html" class="sidebar-brand" aria-label="PushFlow home">
+      <img src="https://raw.githubusercontent.com/M41NUL/pushflow-web/main/img/logo.png" alt="PushFlow" />
+    </a>
+
+    <nav class="side-nav">
+      <a href="dashboard.html" class="side-link">
+        <svg class="icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+        Dashboard
+      </a>
+      <a href="apps.html" class="side-link">
+        <svg class="icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 7h6M12 17.01v.01"/></svg>
+        Apps
+      </a>
+      <a href="notifications.html" class="side-link">
+        <svg class="icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 6.5-3 8-3 8h18s-3-1.5-3-8"/><path d="M10.3 20a1.94 1.94 0 0 0 3.4 0"/></svg>
+        Send
+      </a>
+      <a href="analytics.html" class="side-link">
+        <svg class="icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+        Analytics
+      </a>
+      <a href="api-keys.html" class="side-link active">
+        <svg class="icon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3M17 6l3 3M14 9l2 2"/></svg>
+        API keys
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <a href="settings.html" class="side-user">
+        <div class="side-avatar" id="sideAvatar">—</div>
+        <div class="side-user-info">
+          <div class="side-user-name" id="sideUserName">Loading…</div>
+          <div class="side-user-plan">Free plan</div>
+        </div>
+      </a>
+    </div>
+  </aside>
+
+  <!-- ============ MAIN ============ -->
+  <main class="main">
+    <div class="top-brand-row">
+      <a href="index.html" aria-label="PushFlow home">
+        <img src="https://raw.githubusercontent.com/M41NUL/pushflow-web/main/img/logo.png" alt="PushFlow" />
+      </a>
+
+      <div class="account-menu" id="accountMenu">
+        <button class="account-trigger" id="accountTrigger" aria-haspopup="true" aria-expanded="false">
+          <div class="side-avatar" id="topAvatar">—</div>
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+
+        <div class="account-dropdown" id="accountDropdown">
+          <div class="account-dropdown-head">
+            <div class="account-dropdown-name" id="dropdownName">Loading…</div>
+            <div class="account-dropdown-email" id="dropdownEmail"></div>
+          </div>
+
+          <a href="settings.html" class="account-dropdown-item">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.5-6 8-6s8 2 8 6"/></svg>
+            Profile
+          </a>
+          <a href="api-keys.html" class="account-dropdown-item">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3M17 6l3 3M14 9l2 2"/></svg>
+            API keys
+          </a>
+          <a href="documentation.html" target="_blank" rel="noopener" class="account-dropdown-item">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2h9l5 5v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg>
+            Documentation
+          </a>
+
+          <div class="account-dropdown-divider"></div>
+
+          <button class="account-dropdown-item danger" id="logoutBtn">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+            Log out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ LOGOUT CONFIRMATION MODAL ============ -->
+    <div class="modal-overlay" id="logoutModalOverlay">
+      <div class="modal-box center glass" id="logoutModalBox" role="dialog" aria-modal="true" aria-labelledby="logoutModalTitle">
+        <div class="modal-icon danger">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        </div>
+        <div class="modal-title" id="logoutModalTitle">Log out of PushFlow?</div>
+        <div class="modal-text">You'll need to sign in again to access your dashboard.</div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost" id="logoutCancelBtn">Cancel</button>
+          <button class="btn btn-danger" id="logoutConfirmBtn">Log out</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="topbar">
+      <div>
+        <div class="eyebrow">
+          <svg viewBox="0 0 24 24" width="7" height="7"><circle cx="12" cy="12" r="8" fill="currentColor"/></svg>
+          DEVELOPER
+        </div>
+        <div class="page-title">API Keys</div>
+        <div class="page-sub">Manage keys used to authenticate requests to the PushFlow API.</div>
+      </div>
+
+      <div class="topbar-actions">
+        <button class="btn btn-primary" id="createKeyOpenBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Create key
+        </button>
+      </div>
+    </div>
+
+    <div class="warn-note">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17.01v.01"/><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/></svg>
+      <p><b>Keep your keys secret.</b> Anyone with a live key can send notifications through your apps. The full key is only shown once, right after creation.</p>
+    </div>
+
+    <div class="glass panel">
+      <div class="panel-head">
+        <div class="panel-title">Your keys</div>
+      </div>
+      <div class="panel-desc">Keys are scoped to your account and work across all of your apps.</div>
+
+      <div class="key-list" id="keyList">
+        <div class="empty-state">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+          <p>Loading keys…</p>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- ============ CREATE KEY MODAL ============ -->
+<div class="modal-overlay" id="createModalOverlay">
+  <div class="modal-box glass" id="createModalBox" role="dialog" aria-modal="true" aria-labelledby="createModalTitle">
+    <div class="modal-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3M17 6l3 3M14 9l2 2"/></svg>
+    </div>
+    <div class="modal-title" id="createModalTitle">Create a new API key</div>
+    <div class="modal-text">Give it a name so you remember what it's used for.</div>
+
+    <div class="field">
+      <label for="keyNameInput">Key name</label>
+      <input type="text" id="keyNameInput" placeholder="e.g. Production server" maxlength="60" />
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="createCancelBtn">Cancel</button>
+      <button class="btn btn-primary" id="createConfirmBtn">Create key</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ NEW KEY REVEAL MODAL ============ -->
+<div class="modal-overlay" id="revealModalOverlay">
+  <div class="modal-box glass" id="revealModalBox" role="dialog" aria-modal="true" aria-labelledby="revealModalTitle">
+    <div class="modal-icon">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+    </div>
+    <div class="modal-title" id="revealModalTitle">Key created</div>
+    <div class="modal-text">Copy this key now — you won't be able to see it again.</div>
+
+    <div class="reveal-box">
+      <div class="reveal-label">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17.01v.01"/><circle cx="12" cy="12" r="9"/></svg>
+        Shown only once
+      </div>
+      <div class="reveal-key">
+        <span id="revealKeyValue">pf_live_••••••••••••••••</span>
+        <button class="icon-btn" id="revealCopyBtn" aria-label="Copy key">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" id="revealDoneBtn" style="flex:1">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ REVOKE CONFIRMATION MODAL ============ -->
+<div class="modal-overlay" id="revokeModalOverlay">
+  <div class="modal-box center glass" id="revokeModalBox" role="dialog" aria-modal="true" aria-labelledby="revokeModalTitle">
+    <div class="modal-icon danger">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>
+    </div>
+    <div class="modal-title" id="revokeModalTitle">Revoke this key?</div>
+    <div class="modal-text" id="revokeModalText">Any requests using this key will stop working immediately. This can't be undone.</div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" id="revokeCancelBtn">Cancel</button>
+      <button class="btn btn-danger" id="revokeConfirmBtn">Revoke</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+  <span id="toastText">Copied to clipboard</span>
+</div>
+
+<!-- ============ BOTTOM NAV (mobile) ============ -->
+<nav class="bottom-nav">
+  <a href="dashboard.html" class="bottom-link">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg>
+    Dashboard
+  </a>
+  <a href="apps.html" class="bottom-link">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M9 7h6M12 17.01v.01"/></svg>
+    Apps
+  </a>
+  <a href="notifications.html" class="bottom-link">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8.5a6 6 0 1 0-12 0c0 6.5-3 8-3 8h18s-3-1.5-3-8"/><path d="M10.3 20a1.94 1.94 0 0 0 3.4 0"/></svg>
+    Send
+  </a>
+  <a href="analytics.html" class="bottom-link">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>
+    Analytics
+  </a>
+  <a href="api-keys.html" class="bottom-link active">
+    <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3M17 6l3 3M14 9l2 2"/></svg>
+    API keys
+  </a>
+</nav>
+
+<script>
+/* ==========================================================================
+   DATA LAYER — shape matches the future backend response:
+
+   GET /api/keys →
+   { keys: [ { id, name, prefix, createdAt, lastUsedAt|null }, ... ] }
+
+   POST /api/keys  { name } →
+   { id, name, prefix, key, createdAt }   // full `key` returned once only
+
+   DELETE /api/keys/:id → { success: true }
+   ========================================================================== */
+
+const DEMO_KEYS = [
+  { id: 'key_1', name: 'Production server', prefix: 'pf_live_8kQ2', createdAt: Date.now() - 1000*60*60*24*30, lastUsedAt: Date.now() - 1000*60*40 },
+  { id: 'key_2', name: 'Staging', prefix: 'pf_live_m9Vr', createdAt: Date.now() - 1000*60*60*24*6, lastUsedAt: Date.now() - 1000*60*60*20 },
+  { id: 'key_3', name: 'Local testing', prefix: 'pf_live_3xTn', createdAt: Date.now() - 1000*60*60*3, lastUsedAt: null }
+];
+
+let keysCache = [];
+
+function timeAgo(ts){
+  if (!ts) return 'Never used';
+  const diff = Math.max(0, Date.now() - ts);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+function formatDate(ts){
+  return new Date(ts).toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+}
+
+const ICON_KEY = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M10.5 12.5 20 3M17 6l3 3M14 9l2 2"/></svg>';
+const ICON_TRASH = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>';
+
+function renderKeys(keys){
+  keysCache = keys;
+  const list = document.getElementById('keyList');
+  if (!keys || keys.length === 0){
+    list.innerHTML = `
+      <div class="empty-state">
+        ${ICON_KEY}
+        <p>No API keys yet — create one to start making authenticated requests.</p>
+      </div>`;
+    return;
+  }
+  list.innerHTML = keys.map(k => `
+    <div class="key-item" data-id="${k.id}">
+      <div class="key-main">
+        <div class="key-icon">${ICON_KEY}</div>
+        <div class="key-info">
+          <div class="key-name">${escapeHtml(k.name)} <span class="key-badge">Live</span></div>
+          <div class="key-value">${k.prefix}••••••••••••</div>
+          <div class="key-meta">Created ${formatDate(k.createdAt)} · Last used ${timeAgo(k.lastUsedAt)}</div>
+        </div>
+      </div>
+      <div class="key-actions">
+        <button class="icon-btn danger" aria-label="Revoke key" onclick="requestRevoke('${k.id}')">${ICON_TRASH}</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escapeHtml(str){
+  const d = document.createElement('div');
+  d.textContent = str;
+  return d.innerHTML;
+}
+
+async function loadKeys(){
+  // Once the backend exists:
+  // const res = await fetch('/api/keys', { credentials: 'include' });
+  // const data = await res.json();
+  const data = { keys: DEMO_KEYS };
+  renderKeys(data.keys);
+}
+
+async function loadUser(){
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'include' });
+    const data = await res.json();
+    if (data.authenticated && data.user){
+      const name = data.user.name || 'Account';
+      const initial = name.charAt(0).toUpperCase();
+      document.getElementById('sideUserName').textContent = name;
+      document.getElementById('sideAvatar').textContent = initial;
+      document.getElementById('topAvatar').textContent = initial;
+      document.getElementById('dropdownName').textContent = name;
+      document.getElementById('dropdownEmail').textContent = data.user.email || '';
+    } else {
+      window.location.href = 'login.html';
+    }
+  } catch (err) {
+    document.getElementById('sideUserName').textContent = 'Mainul';
+    document.getElementById('sideAvatar').textContent = 'M';
+    document.getElementById('topAvatar').textContent = 'M';
+    document.getElementById('dropdownName').textContent = 'Mainul';
+    document.getElementById('dropdownEmail').textContent = 'devmainulislam@gmail.com';
+  }
+}
+
+// ---- Account dropdown toggle ----
+const accountTrigger = document.getElementById('accountTrigger');
+const accountDropdown = document.getElementById('accountDropdown');
+
+accountTrigger.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const isOpen = accountDropdown.classList.toggle('open');
+  accountTrigger.classList.toggle('open', isOpen);
+  accountTrigger.setAttribute('aria-expanded', isOpen);
+});
+document.addEventListener('click', (e) => {
+  if (!document.getElementById('accountMenu').contains(e.target)){
+    accountDropdown.classList.remove('open');
+    accountTrigger.classList.remove('open');
+    accountTrigger.setAttribute('aria-expanded', 'false');
+  }
+});
+
+// ---- Toast ----
+let toastTimer;
+function showToast(text){
+  const toast = document.getElementById('toast');
+  document.getElementById('toastText').textContent = text;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+}
+
+// ---- Generic modal helpers ----
+function openModal(overlay){ overlay.classList.add('open'); }
+function closeModal(overlay){ overlay.classList.remove('open'); }
+function wireModal(overlayId, boxId, onOutsideOrEsc){
+  const overlay = document.getElementById(overlayId);
+  const box = document.getElementById(boxId);
+  overlay.addEventListener('click', (e) => { if (!box.contains(e.target)) onOutsideOrEsc(); });
+  return { overlay, box };
+}
+
+// ---- Logout modal ----
+const logout = wireModal('logoutModalOverlay', 'logoutModalBox', () => closeModal(logout.overlay));
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  accountDropdown.classList.remove('open');
+  accountTrigger.classList.remove('open');
+  openModal(logout.overlay);
+  document.getElementById('logoutConfirmBtn').focus();
+});
+document.getElementById('logoutCancelBtn').addEventListener('click', () => closeModal(logout.overlay));
+document.getElementById('logoutConfirmBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('logoutConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Logging out…';
+  try {
+    await Promise.race([
+      fetch('/api/auth/logout', { method: 'POST', credentials: 'include' }),
+      new Promise((resolve) => setTimeout(resolve, 1500))
+    ]);
+  } catch (err) {}
+  window.location.href = 'login.html';
+});
+
+// ---- Create key modal ----
+const create = wireModal('createModalOverlay', 'createModalBox', () => closeModal(create.overlay));
+document.getElementById('createKeyOpenBtn').addEventListener('click', () => {
+  document.getElementById('keyNameInput').value = '';
+  openModal(create.overlay);
+  setTimeout(() => document.getElementById('keyNameInput').focus(), 50);
+});
+document.getElementById('createCancelBtn').addEventListener('click', () => closeModal(create.overlay));
+document.getElementById('keyNameInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') document.getElementById('createConfirmBtn').click();
+});
+
+const reveal = wireModal('revealModalOverlay', 'revealModalBox', () => closeModal(reveal.overlay));
+document.getElementById('createConfirmBtn').addEventListener('click', async () => {
+  const nameInput = document.getElementById('keyNameInput');
+  const name = nameInput.value.trim() || 'Unnamed key';
+  const btn = document.getElementById('createConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+
+  // Once the backend exists:
+  // const res = await fetch('/api/keys', { method:'POST', credentials:'include',
+  //   headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name }) });
+  // const newKey = await res.json();
+  const newKey = {
+    id: 'key_' + Math.random().toString(36).slice(2, 8),
+    name,
+    prefix: 'pf_live_' + Math.random().toString(36).slice(2, 6),
+    key: 'pf_live_' + Array.from({length:32}, () => 'abcdefghijklmnopqrstuvwxyz0123456789'[Math.floor(Math.random()*36)]).join(''),
+    createdAt: Date.now(),
+    lastUsedAt: null
+  };
+
+  btn.disabled = false; btn.textContent = 'Create key';
+  closeModal(create.overlay);
+
+  keysCache.unshift({ id:newKey.id, name:newKey.name, prefix:newKey.prefix, createdAt:newKey.createdAt, lastUsedAt:null });
+  renderKeys(keysCache);
+
+  document.getElementById('revealKeyValue').textContent = newKey.key;
+  document.getElementById('revealCopyBtn').dataset.key = newKey.key;
+  openModal(reveal.overlay);
+});
+document.getElementById('revealCopyBtn').addEventListener('click', () => {
+  const key = document.getElementById('revealCopyBtn').dataset.key;
+  navigator.clipboard.writeText(key).then(() => showToast('Key copied to clipboard'));
+});
+document.getElementById('revealDoneBtn').addEventListener('click', () => closeModal(reveal.overlay));
+
+// ---- Revoke modal ----
+const revoke = wireModal('revokeModalOverlay', 'revokeModalBox', () => closeModal(revoke.overlay));
+let pendingRevokeId = null;
+function requestRevoke(id){
+  pendingRevokeId = id;
+  const k = keysCache.find(x => x.id === id);
+  document.getElementById('revokeModalText').textContent =
+    k ? `Revoking “${k.name}” will stop any requests using this key immediately. This can't be undone.`
+      : `Any requests using this key will stop working immediately. This can't be undone.`;
+  openModal(revoke.overlay);
+}
+document.getElementById('revokeCancelBtn').addEventListener('click', () => closeModal(revoke.overlay));
+document.getElementById('revokeConfirmBtn').addEventListener('click', async () => {
+  if (!pendingRevokeId) return closeModal(revoke.overlay);
+  const btn = document.getElementById('revokeConfirmBtn');
+  btn.disabled = true; btn.textContent = 'Revoking…';
+
+  // Once the backend exists:
+  // await fetch(`/api/keys/${pendingRevokeId}`, { method:'DELETE', credentials:'include' });
+
+  keysCache = keysCache.filter(k => k.id !== pendingRevokeId);
+  renderKeys(keysCache);
+
+  btn.disabled = false; btn.textContent = 'Revoke';
+  closeModal(revoke.overlay);
+  showToast('Key revoked');
+  pendingRevokeId = null;
+});
+
+// ---- Global Escape handling for whichever modal is open ----
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  [logout, create, reveal, revoke].forEach(m => {
+    if (m.overlay.classList.contains('open')) closeModal(m.overlay);
+  });
+});
+
+loadUser();
+loadKeys();
+</script>
+</body>
+</html>
