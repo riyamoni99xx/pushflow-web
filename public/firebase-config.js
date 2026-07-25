@@ -1,12 +1,18 @@
 // PushFlow — Firebase client init + shared auth helpers.
 // Loaded by login.html / register.html before their own inline scripts.
+//
+// Uses REDIRECT-based OAuth (not popup) because mobile browsers frequently
+// close popups before the sign-in flow completes, producing
+// "auth/popup-closed-by-user" even on a successful click. Redirect avoids
+// that entirely: the whole page navigates to Google/GitHub and back.
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
   GithubAuthProvider,
-  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Values from Firebase Console → Project settings → General → Your apps → Web app config.
@@ -84,30 +90,41 @@ async function loginWithEmail({ email, password, remember }) {
   return data;
 }
 
-/** Google popup sign-in via Firebase, then hands the ID token to our backend. */
-async function signInWithGoogle() {
+/** Kicks off Google sign-in via full-page redirect (completes on next page load). */
+function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
-  const result = await signInWithPopup(auth, provider);
-  const idToken = await result.user.getIdToken();
-  const data = await apiFetch("/api/auth/google", {
-    method: "POST",
-    body: { idToken },
-  });
-  storeSession(data);
-  return data;
+  sessionStorage.setItem("pf_oauth_provider", "google");
+  return signInWithRedirect(auth, provider);
 }
 
-/** GitHub popup sign-in via Firebase, then hands the ID token to our backend. */
-async function signInWithGithub() {
+/** Kicks off GitHub sign-in via full-page redirect (completes on next page load). */
+function signInWithGithub() {
   const provider = new GithubAuthProvider();
-  const result = await signInWithPopup(auth, provider);
-  const idToken = await result.user.getIdToken();
-  const data = await apiFetch("/api/auth/github", {
-    method: "POST",
-    body: { idToken },
-  });
-  storeSession(data);
-  return data;
+  sessionStorage.setItem("pf_oauth_provider", "github");
+  return signInWithRedirect(auth, provider);
+}
+
+/**
+ * Call this once on page load (login.html / register.html) to finish an
+ * OAuth redirect flow, if one is in progress. Returns null if there was no
+ * pending redirect result.
+ */
+async function completeOAuthRedirect() {
+  const provider = sessionStorage.getItem("pf_oauth_provider");
+  if (!provider) return null;
+
+  try {
+    const result = await getRedirectResult(auth);
+    if (!result || !result.user) return null;
+
+    const idToken = await result.user.getIdToken();
+    const endpoint = provider === "github" ? "/api/auth/github" : "/api/auth/google";
+    const data = await apiFetch(endpoint, { method: "POST", body: { idToken } });
+    storeSession(data);
+    return data;
+  } finally {
+    sessionStorage.removeItem("pf_oauth_provider");
+  }
 }
 
 async function forgotPassword(email) {
@@ -139,6 +156,7 @@ window.PushFlowAuth = {
   loginWithEmail,
   signInWithGoogle,
   signInWithGithub,
+  completeOAuthRedirect,
   forgotPassword,
   logout,
   getStoredUser,
