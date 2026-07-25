@@ -13,6 +13,7 @@ const UserModel = {
       lastName: data.lastName || '',
       name: data.name || `${data.firstName || ''} ${data.lastName || ''}`.trim(),
       photoURL: data.photoURL || null,
+      phone: data.phone || '',
       provider: data.provider, // 'password' | 'google' | 'github'
       emailVerified: data.emailVerified || false,
       disabled: false,
@@ -56,8 +57,8 @@ const UserModel = {
   /** Public-safe projection — strips nothing sensitive since we don't store passwords here (Firebase Auth handles that). */
   toPublic(user) {
     if (!user) return null;
-    const { uid, email, firstName, lastName, name, photoURL, provider, emailVerified, createdAt, lastLoginAt } = user;
-    return { uid, email, firstName, lastName, name, photoURL, provider, emailVerified, createdAt, lastLoginAt };
+    const { uid, email, firstName, lastName, name, photoURL, phone, provider, emailVerified, createdAt, lastLoginAt } = user;
+    return { uid, email, firstName, lastName, name, photoURL, phone, provider, emailVerified, createdAt, lastLoginAt };
   },
 };
 

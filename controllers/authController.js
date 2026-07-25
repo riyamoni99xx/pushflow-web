@@ -35,7 +35,7 @@ async function issueTokens(res, user, remember = false) {
 
 /** POST /api/auth/register */
 const register = asyncHandler(async (req, res) => {
-  const { fname, lname, email, password } = req.body;
+  const { fname, lname, email, phone, password } = req.body;
 
   const existing = await UserModel.findByEmail(email);
   if (existing) {
@@ -55,6 +55,7 @@ const register = asyncHandler(async (req, res) => {
     firstName: fname,
     lastName: lname,
     name: `${fname} ${lname}`.trim(),
+    phone: phone || '',
     provider: 'password',
     emailVerified: false,
   });

@@ -13,6 +13,7 @@ router.post(
   [
     body('fname').trim().notEmpty().withMessage('First name is required'),
     body('lname').trim().notEmpty().withMessage('Last name is required'),
+    body('phone').trim().notEmpty().withMessage('Phone number is required'),
     body('email').isEmail().withMessage('A valid email is required').normalizeEmail(),
     body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
   ],
